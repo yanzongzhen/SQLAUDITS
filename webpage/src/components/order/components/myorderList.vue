@@ -20,12 +20,12 @@
           <br>
           <section v-if="!this.export">
               <Button type="text" v-if="this.$route.query.status === 1" @click.native="rollback()">查看回滚语句</Button>
-              <Button type="text" v-else-if="this.$route.query.status === 0 || this.$route.query.status ===4"
+              <Button type="text" v-else-if="this.$route.query.status === 0 || this.$route.query.status === 4"
                   @click.native="repairOrder()">重新提交
               </Button>
           </section>
           <Button type="text" v-if="this.$route.query.status === 2" @click.native="delorder()">工单撤销</Button>
-          <Button type="text" @click.native="exportdata()">导出数据</Button>
+          <Button type="text"  v-if="this.export && !this.maxExport" @click.native="exportdata()">导出数据</Button>
           <Button type="text" @click.native="$router.go(-1)">返回</Button>
         </div>
         <Row v-if="!this.export">
@@ -34,10 +34,16 @@
                    size="large"></Table>
           </Col>
         </Row>
-        <p>查询结果:</p>
-        <Table :columns="columnsName1" :data="Testresults" highlight-row ref="table"></Table>
-        <br>
-        <Page :total="total" show-total @on-change="splice_arr" ref="totol"></Page>
+        <section v-if="this.export && !this.maxExport">
+          <p>查询结果:</p>
+          <Table :columns="columnsName1" :data="Testresults" highlight-row ref="table"></Table>
+          <br>
+          <Page :total="total" show-total @on-change="splice_arr" ref="totol"></Page>
+        </section>
+        <section v-if="this.maxExport">
+          <h3>数据量超大，请点击下载查询文件</h3>
+          <Button type="primary" @click.native="downLoad()">下载文件</Button>
+        </section>
       </Card>
     </Row>
     <BackTop :height="100" :bottom="200">
@@ -90,7 +96,13 @@
   import axios from 'axios'
   import ExportCsv from '../../../../node_modules/iview/src/components/table/export-csv'
   import Csv from '../../../../node_modules/iview/src/utils/csv'
-
+  const isEmpty = function isEmpty (obj) {
+      if (typeof obj === 'undefined' || obj === null || obj === '') {
+          return true
+      } else {
+          return false
+      }
+  }
   const exportcsv = function exportCsv (params) {
     if (params.filename) {
       if (params.filename.indexOf('.csv') === -1) {
@@ -122,6 +134,7 @@
     name: 'myorder-list',
     data () {
       return {
+        maxExport: false,
         export: false,
         columnsName1: [],
         Testresults: [],
@@ -177,6 +190,9 @@
       }
     },
     methods: {
+      downLoad () {
+        window.location.href = this.filename
+      },
       rollback () {
         this.sql = ''
         if (this.TableDataNew[1].state.length === 40) {
@@ -201,13 +217,16 @@
         }
       },
       exportdata () {
-        console.log('exportcsv', '"exportcsv"')
-        exportcsv({
-          filename: 'data_export',
-          original: true,
-          data: this.allsearchdata,
-          columns: this.columnsName1
-        })
+        if (this.allsearchdata) {
+          exportcsv({
+            filename: 'data_export',
+            original: true,
+            data: this.allsearchdata,
+            columns: this.columnsName1
+          })
+        } else {
+          this.$Message.info('当前没有数据可以导出!')
+        }
       },
       repairOrder () {
         axios.put(`${this.$config.url}/detail`, {'id': this.$route.query.id})
@@ -265,6 +284,10 @@
             this.columnsName1 = res.data.data.title
             this.Testresults = this.allsearchdata
             this.total = res.data.data.len
+            if (!isEmpty(res.data.filename)) {
+              this.maxExport = true
+              this.filename = res.data.filename
+            }
           }
           this.TableDataNew = res.data.data
           this.dmlorddl = res.data.type

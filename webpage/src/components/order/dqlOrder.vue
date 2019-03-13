@@ -151,6 +151,14 @@
   import ICol from '../../../node_modules/iview/src/components/grid/col.vue'
   import axios from 'axios'
 
+  const concat_ = function (arr1, arr2) {
+    let arr = arr1.concat();
+    for (let i = 0; i < arr2.length; i++) {
+      arr.indexOf(arr2[i]) === -1 ? arr.push(arr2[i]) : 0;
+    }
+    return arr;
+  }
+
   export default {
     components: {
       ICol,
@@ -164,8 +172,10 @@
             return date && date.valueOf() < Date.now() - 86400000
           }
         },
+        data1: [],
         validate_gen: true,
         formItem: {
+          tablename: '',
           textarea: '',
           computer_room: '',
           connection_name: '',
@@ -349,7 +359,19 @@
             this.$config.err_notice(this, error)
           })
       },
-
+      updateWordList () {
+          axios.put(`${this.$config.url}/query_worklf`, {'mode': 'table', 'base': this.formItem.tablename})
+          .then(res => {
+            this.wordList = concat_(this.wordList, res.data.highlight)
+            for (let i = 0; i < this.data1[0].children.length; i++) {
+              if (this.data1[0].children[i].title === this.formItem.tablename) {
+                this.data1[0].children[i].children = res.data.table
+              }
+            }
+            this.$Spin.hide()
+          })
+          .catch(() => this.$Spin.hide())
+      },
       acquireStruct () {
       this.$refs['formItem'].validate((valid) => {
         if (valid) {

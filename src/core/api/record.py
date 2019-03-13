@@ -3,9 +3,8 @@ import json
 from libs import baseview, rollback, util
 from rest_framework.response import Response
 from django.http import HttpResponse
-from core.models import SqlOrder, SqlRecord
+from core.models import SqlOrder, SqlRecord, querypermissions
 from libs.serializers import Record, QueryMissions_Serializers
-from core.models import querypermissions
 
 
 CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
@@ -73,33 +72,37 @@ class order_detail(baseview.BaseView):
         except KeyError as e:
             CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
         else:
-            type_id = SqlOrder.objects.filter(id=order_id).first()
-            try:
-                if status == '1' or status == '4':
-                    if type_id.type == 2:
-                        #  查询的
+            order = SqlOrder.objects.filter(id=order_id).first()
+
+            if order.type == 2:
+                try:
+                    if status == '1' or status == '4':
                         data = querypermissions.objects.filter(work_id=work_id).first()
                         if data:
-                            _in = {"data": data.answer, "filename": data.filename, "export": type_id.export, 'type': type_id.type}
+                            _in = {"data": data.answer, "filename": data.filename, "export": order.export, 'type': order.type}
                         else: 
-                            _in = {"data": [], "filename": "", "export": type_id.export, 'type': type_id.type}
+                            _in = {"data": None, "filename": "", "export": order.export, 'type': order.type}
                         return Response(_in)
                     else:
+                        data = querypermissions.objects.filter(work_id=work_id).first()
+                        _in = {'data': data.answer, 'filename': data.filename, "export": order.export, 'type': order.type}
+                        return Response(_in)
+                except Exception as e:
+                    CUSTOM_ERROR.error(f'{e.__class__.__name__} : {e}')
+                    return HttpResponse(status=500)
+            else:
+                try:
+                    if status == '1' or status == '4':
                         data = SqlRecord.objects.filter(workid=work_id).all()
                         _serializers = Record(data, many=True)
                         return Response({'data': _serializers.data, 'type': type_id.type})
-                else:
-                    if type_id.type == 2:
-                        #  查询的
-                        data = querypermissions.objects.filter(work_id=work_id).first()
-                        _in = {'data': data.answer, 'filename': data.filename}
                     else:
                         data = SqlOrder.objects.filter(work_id=work_id).first()
                         _in = {'data': [{'sql': x} for x in data.sql.split(';')], 'type': type_id.type}
-                    return Response(_in)
-            except Exception as e:
-                CUSTOM_ERROR.error(f'{e.__class__.__name__} : {e}')
-                return HttpResponse(status=500)
+                        return Response(_in)
+                except Exception as e:
+                    CUSTOM_ERROR.error(f'{e.__class__.__name__} : {e}')
+                    return HttpResponse(status=500)
 
     def put(self, request, args: str = None):
 

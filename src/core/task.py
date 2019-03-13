@@ -256,11 +256,13 @@ class order_push_message(object):
                                         l[i] = 'blob字段为不可呈现类型' 
                     
                     if len(data_set["data"]) > 1000:
+                        tmp = data_set.update({"data": data_set["data"][:100]})
                         querypermissions.objects.create(
                             work_id=self.order.work_id,
                             username=self.order.username,
                             statements=query_sql,
-                            filename="answer.csv"
+                            filename="answer.csv",
+                            answer=json.dumps(tmp)
                         )
                     else:
                         querypermissions.objects.create(

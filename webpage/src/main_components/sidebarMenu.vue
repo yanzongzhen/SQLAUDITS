@@ -64,6 +64,7 @@
         filtermenulist: {
           'ddledit': '',
           'dmledit': '',
+          'dqledit': '',
           'indexedit': '',
           'serach-sql': '1',
           'management-user': '',
@@ -104,6 +105,7 @@
           this.filtermenulist.ddledit = c.ddl
           this.filtermenulist.indexedit = c.ddl
           this.filtermenulist.dmledit = c.dml
+          this.filtermenulist.dqledit = c.dql
           this.filtermenulist['management-user'] = c.user
           this.filtermenulist['management-database'] = c.base
         })

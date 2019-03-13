@@ -20,6 +20,29 @@
           <Input v-model="addAuthGroupForm.groupname" v-bind:readonly="isReadOnly"></Input>
         </FormItem>
         <template>
+          <FormItem label="DQL及索引权限:">
+            <RadioGroup v-model="permission.dql">
+              <Radio label="1">是</Radio>
+              <Radio label="0">否</Radio>
+            </RadioGroup>
+          </FormItem>
+          <template v-if="permission.dql === '1'">
+            <FormItem label="连接名:">
+              <div style="border-bottom: 1px solid #e9e9e9;padding-bottom:6px;margin-bottom:6px;">
+                <Checkbox
+                  :indeterminate="indeterminate.dql"
+                  :value="checkAll.dql"
+                  @click.prevent.native="ddlCheckAll('dqlcon', 'dql', 'connection')">全选
+                </Checkbox>
+              </div>
+              <CheckboxGroup v-model="permission.dqlcon">
+                <Checkbox v-for="i in connectionList.connection" :label="i.connection_name" :key="i.connection_name">
+                  <Tag color="purple" :key="i"> {{i.connection_name}}</Tag>
+                </Checkbox>
+              </CheckboxGroup>
+            </FormItem>
+          </template>
+          <hr style="height:1px;border:none;border-top:1px dashed #dddee1;"/>
           <FormItem label="DDL及索引权限:">
             <RadioGroup v-model="permission.ddl">
               <Radio label="1">是</Radio>
@@ -159,6 +182,8 @@
     ddlcon: [],
     dml: '0',
     dmlcon: [],
+    dql: '0',
+    dqlcon: [],
     query: '0',
     querycon: [],
     user: '0',
@@ -230,12 +255,14 @@
         indeterminate: {
           ddl: true,
           dml: true,
+          dql: true,
           query: true,
           person: true
         },
         checkAll: {
           ddl: false,
           dml: false,
+          dql: false,
           query: false,
           person: false
         },

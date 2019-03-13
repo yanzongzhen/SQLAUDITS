@@ -121,6 +121,18 @@ export const appRouter = [{
         component: resolve => {
           require(['./components/order/dmlOrder.vue'], resolve)
         }
+      },
+      {
+        path: 'dqledit',
+        name: 'dqledit',
+        title: 'DQL',
+        icon: 'md-code',
+        meta: {
+          keepAlive: true
+        },
+        component: resolve => {
+          require(['./components/order/dqledit.vue'], resolve)
+        }
       }
     ]
   },

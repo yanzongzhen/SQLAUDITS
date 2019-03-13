@@ -14,23 +14,30 @@
   <div>
     <Row>
       <Card>
-        <p slot="title" style="height: 45px">
+        <div slot="title" style="height: 45px">
           <Icon type="android-send"></Icon>
           工单{{ this.$route.query.workid }}详细信息
           <br>
-          <Button type="text" v-if="this.$route.query.status === 1" @click.native="rollback()">查看回滚语句</Button>
-          <Button type="text" v-else-if="this.$route.query.status === 0 || this.$route.query.status ===4"
+          <section v-if="!this.export">
+              <Button type="text" v-if="this.$route.query.status === 1" @click.native="rollback()">查看回滚语句</Button>
+              <Button type="text" v-else-if="this.$route.query.status === 0 || this.$route.query.status ===4"
                   @click.native="repairOrder()">重新提交
-          </Button>
+              </Button>
+          </section>
           <Button type="text" v-if="this.$route.query.status === 2" @click.native="delorder()">工单撤销</Button>
+          <Button type="text" @click.native="exportdata()">导出数据</Button>
           <Button type="text" @click.native="$router.go(-1)">返回</Button>
-        </p>
-        <Row>
+        </div>
+        <Row v-if="!this.export">
           <Col span="24">
             <Table border :columns="tabcolumns" :data="TableDataNew" class="tabletop" style="background: #5cadff"
                    size="large"></Table>
           </Col>
         </Row>
+        <p>查询结果:</p>
+        <Table :columns="columnsName1" :data="Testresults" highlight-row ref="table"></Table>
+        <br>
+        <Page :total="total" show-total @on-change="splice_arr" ref="totol"></Page>
       </Card>
     </Row>
     <BackTop :height="100" :bottom="200">
@@ -81,11 +88,46 @@
 
 <script>
   import axios from 'axios'
+  import ExportCsv from '../../../../node_modules/iview/src/components/table/export-csv'
+  import Csv from '../../../../node_modules/iview/src/utils/csv'
+
+  const exportcsv = function exportCsv (params) {
+    if (params.filename) {
+      if (params.filename.indexOf('.csv') === -1) {
+        params.filename += '.csv'
+      }
+    } else {
+      params.filename = 'table.csv'
+    }
+
+    let columns = []
+    let datas = []
+    if (params.columns && params.data) {
+      columns = params.columns
+      datas = params.data
+    } else {
+      columns = this.columns
+      if (!('original' in params)) params.original = true
+      datas = params.original ? this.data : this.rebuildData
+    }
+
+    let noHeader = false
+    if ('noHeader' in params) noHeader = params.noHeader
+    const data = Csv(columns, datas, params, noHeader)
+    if (params.callback) params.callback(data)
+    else ExportCsv.download(params.filename, data)
+  }
   //
   export default {
     name: 'myorder-list',
     data () {
       return {
+        export: false,
+        columnsName1: [],
+        Testresults: [],
+        allsearchdata: [],
+        total: 0,
+        filename: null,
         columnsName: [
           {
             title: '回滚语句',
@@ -158,6 +200,15 @@
           this.$Message.error('此工单没有备份或语句执行失败!')
         }
       },
+      exportdata () {
+        console.log('exportcsv', '"exportcsv"')
+        exportcsv({
+          filename: 'data_export',
+          original: true,
+          data: this.allsearchdata,
+          columns: this.columnsName1
+        })
+      },
       repairOrder () {
         axios.put(`${this.$config.url}/detail`, {'id': this.$route.query.id})
           .then(res => {
@@ -200,11 +251,21 @@
           .catch(error => {
             this.$config.err_notice(this, error)
           })
+      },
+      splice_arr (page) {
+        this.Testresults = this.allsearchdata.slice(page * 10 - 10, page * 10)
       }
     },
     mounted () {
       axios.get(`${this.$config.url}/detail?workid=${this.$route.query.workid}&status=${this.$route.query.status}&id=${this.$route.query.id}`)
         .then(res => {
+          if (res.data.hasOwnProperty('export')) {
+            this.export = res.data.export
+            this.allsearchdata = res.data.data.data
+            this.columnsName1 = res.data.data.title
+            this.Testresults = this.allsearchdata
+            this.total = res.data.data.len
+          }
           this.TableDataNew = res.data.data
           this.dmlorddl = res.data.type
         })

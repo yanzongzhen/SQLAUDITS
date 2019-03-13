@@ -114,3 +114,10 @@ class AuthGroup_Serializers(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = grained
         fields = ('id', 'username', 'permissions',)
+
+
+class QueryMissions_Serializers(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = querypermissions
+        fields = ('id','work_id', 'username', 'statements', 'answer', 'filename')

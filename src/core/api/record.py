@@ -4,7 +4,9 @@ from libs import baseview, rollback, util
 from rest_framework.response import Response
 from django.http import HttpResponse
 from core.models import SqlOrder, SqlRecord
-from libs.serializers import Record
+from libs.serializers import Record, QueryMissions_Serializers
+from core.models import querypermissions
+
 
 CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
 
@@ -74,12 +76,26 @@ class order_detail(baseview.BaseView):
             type_id = SqlOrder.objects.filter(id=order_id).first()
             try:
                 if status == '1' or status == '4':
-                    data = SqlRecord.objects.filter(workid=work_id).all()
-                    _serializers = Record(data, many=True)
-                    return Response({'data': _serializers.data, 'type': type_id.type})
+                    if type_id.type == 2:
+                        #  查询的
+                        data = querypermissions.objects.filter(work_id=work_id).first()
+                        if data:
+                            _in = {"data": data.answer, "filename": data.filename, "export": type_id.export, 'type': type_id.type}
+                        else: 
+                            _in = {"data": [], "filename": "", "export": type_id.export, 'type': type_id.type}
+                        return Response(_in)
+                    else:
+                        data = SqlRecord.objects.filter(workid=work_id).all()
+                        _serializers = Record(data, many=True)
+                        return Response({'data': _serializers.data, 'type': type_id.type})
                 else:
-                    data = SqlOrder.objects.filter(work_id=work_id).first()
-                    _in = {'data': [{'sql': x} for x in data.sql.split(';')], 'type': type_id.type}
+                    if type_id.type == 2:
+                        #  查询的
+                        data = querypermissions.objects.filter(work_id=work_id).first()
+                        _in = {'data': data.answer, 'filename': data.filename}
+                    else:
+                        data = SqlOrder.objects.filter(work_id=work_id).first()
+                        _in = {'data': [{'sql': x} for x in data.sql.split(';')], 'type': type_id.type}
                     return Response(_in)
             except Exception as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__} : {e}')

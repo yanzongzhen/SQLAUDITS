@@ -184,6 +184,7 @@ class audit(baseview.SuperUserpermissions):
                     except Exception as e:
                         CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                         return HttpResponse(status=500)
+                        
             elif category == 2:
                 try:
                     perform = request.data['perform']
@@ -200,6 +201,38 @@ class audit(baseview.SuperUserpermissions):
                         {'to_user': username, 'workid': work_id, 'addr': addr_ip}, 9, request.user, mail.email, work_id,
                         '已提交执行人')).start()
                     return Response('工单已提交执行人！')
+            
+            elif category == 3:
+                try:
+                    from_user = request.user
+                    to_user = request.data['to_user']
+                    order_id = request.data['id']
+                except KeyError as e:
+                    CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
+                    return HttpResponse(status=500)
+                else:
+                    try:
+                        idempotent = SqlOrder.objects.filter(
+                            id=order_id).first()
+                        if idempotent.status != 2:
+                            return Response('非法传参，触发幂等操作')
+                        else:
+                            delay = 0
+                            if str(idempotent.delay).rstrip() != '':
+                                now_time = datetime.datetime.now()
+                                next_time = datetime.datetime.strptime(idempotent.delay, "%Y-%m-%d %H:%M")
+                                if now_time > next_time:
+                                    return Response('工单定时执行时间不得小于当前时间！！！')
+                                delay = int((next_time - now_time).total_seconds())
+ 
+                            SqlOrder.objects.filter(
+                                id=order_id).update(status=3)
+                            arr = order_push_message(addr_ip, order_id, from_user, to_user)
+                            threading.Timer(delay, arr.run).start()
+                            return Response('工单执行成功!请通过记录页面查看具体执行结果')
+                    except Exception as e:
+                        CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
+                        return HttpResponse(status=500)
 
             elif category == 'test':
                 try:

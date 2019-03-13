@@ -6,18 +6,22 @@ import ast
 import time
 from django.http import HttpResponse
 from libs import send_email, util
-from libs import call_inception
+from core.api.serachsql import replace_limit
+from libs import call_inception,con_database
 from .models import (
     DatabaseList,
     Account,
     globalpermissions,
     SqlOrder,
     SqlRecord,
-    grained
+    grained,
+    querypermissions
 )
 
-CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
+import json
 
+CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
+BLACKLIST = ['update', 'insert', 'alter', 'into', 'for', 'drop']
 
 def set_auth_group(user):
     perm = {
@@ -126,6 +130,7 @@ class order_push_message(object):
         self.execute()
         self.agreed()
 
+
     def execute(self):
 
         '''
@@ -139,40 +144,133 @@ class order_push_message(object):
         :return: none
 
         '''
+        if self.order.type != 2:
+            try:
+                detail = DatabaseList.objects.filter(id=self.order.bundle_id).first()
 
-        try:
+                with call_inception.Inception(
+                        LoginDic={
+                            'host': detail.ip,
+                            'user': detail.username,
+                            'password': detail.password,
+                            'db': self.order.basename,
+                            'port': detail.port
+                        }
+                ) as f:
+                    res = f.Execute(sql=self.order.sql, backup=self.order.backup)
+                    for i in res:
+                        if i['errlevel'] != 0:
+                            SqlOrder.objects.filter(work_id=self.order.work_id).update(status=4)
+                        SqlRecord.objects.get_or_create(
+                            state=i['stagestatus'],
+                            sql=i['sql'],
+                            error=i['errormessage'],
+                            workid=self.order.work_id,
+                            affectrow=i['affected_rows'],
+                            sequence=i['sequence'],
+                            execute_time=i['execute_time'],
+                            SQLSHA1=i['SQLSHA1'],
+                            backup_dbname=i['backup_dbname']
+                        )
+            except Exception as e:
+                CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
+            finally:
+                status = SqlOrder.objects.filter(work_id=self.order.work_id).first()
+                if status.status != 4:
+                    SqlOrder.objects.filter(id=self.id).update(status=1)
+        else:
+            #  dql 操作
+            un_init = util.init_conf()
+            limit = ast.literal_eval(un_init['other'])
+            sql = self.order.sql
+            check = str(self.order.sql).lower().strip().split(';\n')
+            raw_sql = str(self.order.sql).strip().split(';\n')[-1]
+            un_init = util.init_conf()
+            custom_com = ast.literal_eval(un_init['other'])
+            critical = len(custom_com['sensitive_list'])
+            # 操作实例
             detail = DatabaseList.objects.filter(id=self.order.bundle_id).first()
-
-            with call_inception.Inception(
-                    LoginDic={
-                        'host': detail.ip,
-                        'user': detail.username,
-                        'password': detail.password,
-                        'db': self.order.basename,
-                        'port': detail.port
-                    }
+            with con_database.SQLgo(
+                        ip=detail.ip,
+                        password=detail.password,
+                        user=detail.username,
+                        port=detail.port,
+                        db=self.order.basename
             ) as f:
-                res = f.Execute(sql=self.order.sql, backup=self.order.backup)
-                for i in res:
-                    if i['errlevel'] != 0:
-                        SqlOrder.objects.filter(work_id=self.order.work_id).update(status=4)
-                    SqlRecord.objects.get_or_create(
-                        state=i['stagestatus'],
-                        sql=i['sql'],
-                        error=i['errormessage'],
-                        workid=self.order.work_id,
-                        affectrow=i['affected_rows'],
-                        sequence=i['sequence'],
-                        execute_time=i['execute_time'],
-                        SQLSHA1=i['SQLSHA1'],
-                        backup_dbname=i['backup_dbname']
-                    )
-        except Exception as e:
-            CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
-        finally:
-            status = SqlOrder.objects.filter(work_id=self.order.work_id).first()
-            if status.status != 4:
-                SqlOrder.objects.filter(id=self.id).update(status=1)
+                try:
+                    if check[-1].startswith('show'):
+                        query_sql = raw_sql
+                    else:
+                        if limit.get('limit').strip() == '':
+                            CUSTOM_ERROR.error('未设置全局最大limit值，系统自动设置为1000')
+                            query_sql = replace_limit(raw_sql, 1000)
+                        else:
+                            query_sql = replace_limit(
+                                raw_sql, limit.get('limit'))
+                    data_set = f.search(sql=query_sql)    
+                except Exception as e:
+                    CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
+                
+                else:           
+                    if self.order.sensitive:
+                            as_list = sql_as_ex(
+                                sql, custom_com['sensitive_list'])
+                            if data_set['data']:
+                                fe = []
+                                for k, v in data_set['data'][0].items():
+                                    if isinstance(v, bytes):
+                                        fe.append(k)
+                                for l in data_set['data']:
+                                    if len(fe) != 0:
+                                        for i in fe:
+                                            l[i] = 'blob字段为不可呈现类型'
+                                    for s in as_list:
+                                        if l.get(s):
+                                            if s == "email":
+                                                pattern = re.compile(r"(.*)@(.*)")
+                                                res = re.findall(pattern, l[s])
+                                                if len(res) != 0:
+                                                    l[s] = res[0][0] + "*****"
+                                            elif s == "phone":
+                                                pattern = re.compile(r"(.{3})(.*)(.{4})")
+                                                res = re.findall(pattern, l[s])
+                                                if len(res) != 0:
+                                                    l[s] = res[0][0] + "*****"  + res[0][-1]   
+                                            elif s == "idno":
+                                                pattern = re.compile(r"(.*)(.{4})$")
+                                                res = re.findall(pattern, l[s])
+                                                if len(res) != 0:
+                                                    l[s] = res[0][0] + "*****"                                                                                         
+                                            else:
+                                                l[s] =  l[s][:3] + "****" + l[s][-3:]
+                                        else: continue
+                    else:
+                        if data_set['data']:
+                            fe = []
+                            for k, v in data_set['data'][0].items():
+                                if isinstance(v, bytes):
+                                    fe.append(k)
+                            if len(fe) != 0:
+                                for l in data_set['data']:
+                                    for i in fe:
+                                        l[i] = 'blob字段为不可呈现类型' 
+                    
+                    if len(data_set["data"]) > 1000:
+                        querypermissions.objects.create(
+                            work_id=self.order.work_id,
+                            username=self.order.username,
+                            statements=query_sql,
+                            filename="answer.csv"
+                        )
+                    else:
+                        querypermissions.objects.create(
+                            work_id=self.order.work_id,
+                            username=self.order.username,
+                            statements=query_sql,
+                            answer=json.dumps(data_set)
+                        )
+                    SqlOrder.objects.filter(work_id=self.order.work_id).update(status=1)          
+
 
     def agreed(self):
 
@@ -343,3 +441,37 @@ def ding_url():
     un_init = util.init_conf()
     webhook = ast.literal_eval(un_init['message'])
     return webhook['webhook']
+
+
+def sql_parse(sql):
+    for i in sql.split():
+        for c in BLACKLIST:
+            if i == c:
+                return True
+
+def sql_as_ex(sql, sensitive_list):
+    count = 0
+    sql = sql.split(',')
+    complete = []
+    for comma in sql:
+        _a = comma.split(' ')
+        for _i in _a:
+            if _i is not '':
+                complete.append(_i)
+    for gen in complete:
+        if gen == 'as':
+            count += 1
+    if count != 0:
+        as_list = []
+        for i in range(len(complete)):
+            if complete[i] == 'as':
+                for s in sensitive_list:
+                    if complete[i - 1] == s:
+                        as_list.append(complete[i + 1].rstrip(','))
+
+        if as_list is not None:
+            for sen_i in as_list:
+                sensitive_list.append(sen_i)
+        return sensitive_list
+    else:
+        return sensitive_list

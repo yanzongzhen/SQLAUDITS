@@ -391,6 +391,7 @@
     },
     methods: {
       openOrder (index) {
+        console.log('order_type', this.tableData[index].type)
         this.summit = true
         this.sql = []
         this.togoing = index
@@ -434,11 +435,12 @@
       performTo () {
         this.modal2 = false
         this.tableData[this.togoing].status = 3
-        axios.put(`${this.$config.url}/audit_sql`, {
-          'type': 1,
+        if (this.formitem.type === 2) {
+          axios.put(`${this.$config.url}/audit_sql`, {
+          'type': 3,
           'to_user': this.formitem.username,
           'id': this.formitem.id
-        })
+          })
           .then(res => {
             this.$config.notice(res.data)
             this.refreshData(this.$refs.page.currentPage)
@@ -446,6 +448,20 @@
           .catch(error => {
             this.$config.err_notice(this, error)
           })
+        } else {
+          axios.put(`${this.$config.url}/audit_sql`, {
+          'type': 1,
+          'to_user': this.formitem.username,
+          'id': this.formitem.id
+          })
+          .then(res => {
+            this.$config.notice(res.data)
+            this.refreshData(this.$refs.page.currentPage)
+          })
+          .catch(error => {
+            this.$config.err_notice(this, error)
+          })
+        }
       },
       rejectTo () {
         this.modal2 = false

@@ -100,7 +100,7 @@
             <Card>
               <p slot="title" class="card-title">
                 <Icon type="ios-pulse-strong"></Icon>
-                DDL & DML 工单提交统计
+                DDL & DML & DQL 工单提交统计
               </p>
               <div class="data-source-row">
                 <data-source-pie></data-source-pie>

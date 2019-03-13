@@ -29,6 +29,15 @@ export default {
                   color: '#5cadff'
                 }
               }
+            },
+            {
+              value: parseInt(res.data[2]),
+              name: 'DQL工单提交数',
+              itemStyle: {
+                normal: {
+                  color: 'rgb(100, 213, 114)'
+                }
+              }
             }
           ]
           const option = {
@@ -39,7 +48,7 @@ export default {
             legend: {
               orient: 'vertical',
               left: 'right',
-              data: ['DDL工单提交数', 'DML工单提交数']
+              data: ['DDL工单提交数', 'DML工单提交数', 'DQL工单提交数']
             },
             series: [{
               name: '提交工单数',

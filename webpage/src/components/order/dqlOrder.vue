@@ -33,7 +33,7 @@
                 </FormItem>
 
                 <FormItem label="库名:" prop="basename">
-                  <Select v-model="formItem.basename">
+                  <Select v-model="formItem.basename" @on-change="acquireTable">
                     <Option
                       v-for="item in datalist.basenamelist"
                       :value="item"
@@ -42,6 +42,15 @@
                     </Option>
                   </Select>
                 </FormItem>
+                <Form-item label="数据库表名:">
+                  <Select v-model="formItem.tablename" placeholder="请选择" filterable>
+                    <Option v-for="item in tableform.info" :value="item" :key="item">{{ item }}</Option>
+                  </Select>
+                </Form-item>
+                <Form-item>
+                <Button type="primary" @click="acquireStruct()">获取表结构信息</Button>
+                <Button type="error" @click="canel()">重置</Button>
+                </Form-item>
 
                 <FormItem label="工单说明:" prop="text">
                   <Input v-model="formItem.text" placeholder="请输入"></Input>
@@ -78,37 +87,11 @@
                               v-model="formItem.delay" @on-change="formItem.delay=$event" :editable="false"></DatePicker>
                 </FormItem>
               </Form>
-              <Form :label-width="30">
-                <FormItem>
-                  <Button type="info" icon="md-brush" @click.native="beautify()">美化</Button>
-                  <Button
-                    type="error"
-                    icon="md-trash"
-                    @click.native="ClearForm()"
-                    style="margin-left: 10%"
-                  >清除
-                  </Button>
-                </FormItem>
-
-                <FormItem>
-                  <Button type="warning" icon="md-search" @click.native="test_sql()" :loading="loading">检测</Button>
-                  <Button
-                    type="success"
-                    icon="ios-redo"
-                    @click.native="SubmitSQL()"
-                    style="margin-left: 10%"
-                    :disabled="this.validate_gen"
-                  >提交
-                  </Button>
-                </FormItem>
-              </Form>
 
               <Alert style="height: 145px">检测表字段提示信息
                 <template slot="desc">
                   <p>1.错误等级 0正常,1警告,2错误。</p>
-                  <p>2.阶段状态 审核成功,Audit completed</p>
-                  <p>3.错误信息 用来表示出错错误信息</p>
-                  <p>4.当前检查的sql</p>
+                  <p>2.当前检查的sql</p>
                   <p>注:只有错误等级等于0时提交按钮才会激活</p>
                 </template>
               </Alert>
@@ -122,11 +105,44 @@
             <Icon type="ios-crop"></Icon>
             填写sql语句
           </p>
-          <editor v-model="formItem.textarea" @init="editorInit" @setCompletions="setCompletions"></editor>
           <br>
-          <br>
-          <Table :columns="columnsName" :data="Testresults" highlight-row></Table>
+
+          <Row>
+              <Button type="info" icon="md-brush" @click.native="beautify()">美化</Button>
+              <Button
+                type="error"
+                icon="md-trash"
+                @click.native="ClearForm()"
+                style="margin-left: 10%"
+              >清除
+              </Button>
+              <Button type="warning" style="margin-left: 100px" icon="md-search" @click.native="test_sql()" :loading="loading">检测</Button>
+                <Button
+                  type="success"
+                  icon="ios-redo"
+                  @click.native="SubmitSQL()"
+                  style="margin-left: 10%"
+                  :disabled="this.validate_gen"
+                >提交
+              </Button>
+          </Row>
+          <br>  
+          <Tabs :value="tabs">
+            <TabPane label="填写SQL语句" name="order1" icon="md-code">
+              <editor v-model="formItem.textarea" @init="editorInit" @setCompletions="setCompletions"></editor>
+              <br>
+              <br>
+              <Table :columns="columnsName" :data="Testresults" highlight-row></Table>
+            </TabPane>
+            <TabPane label="表结构详情" name="order2" icon="md-folder">
+                <Table :columns="fieldColumns" :data="fieldData"></Table>
+              </TabPane>
+              <TabPane label="索引详情" name="order3" icon="md-folder">
+                <Table :columns="idxColums" :data="idxData"></Table>
+              </TabPane>
+          </Tabs>       
         </Card>
+        
       </Col>
     </Row>
   </div>
@@ -161,6 +177,7 @@
           export: '0',
           sensitive: '0'
         },
+        tabs: 'order1',
         columnsName: [
           {
             title: 'ID',
@@ -193,6 +210,36 @@
             key: 'SQLSHA1'
           }
         ],
+        tableform: {
+          sqlname: [],
+          basename: [],
+          info: []
+        },
+        optionData: [
+        'varchar',
+        'int',
+        'char',
+        'tinytext',
+        'text',
+        'mediumtext',
+        'longtext',
+        'blob',
+        'mediumblob',
+        'longblob',
+        'tinyint',
+        'smallint',
+        'mediumint',
+        'bigint',
+        'time',
+        'year',
+        'date',
+        'datetime',
+        'timestamp',
+        'decimal',
+        'float',
+        'double',
+        'jason'
+      ],
         Testresults: [],
         item: {},
         datalist: {
@@ -230,6 +277,48 @@
           }]
         },
         id: null,
+              fieldColumns: [
+        {
+          title: '字段名',
+          key: 'Field'
+        },
+        {
+          title: '字段类型',
+          key: 'Type',
+          editable: true
+        },
+        {
+          title: '字段是否为空',
+          key: 'Null',
+          editable: true,
+          option: true
+        },
+        {
+          title: '默认值',
+          key: 'Default',
+          editable: true
+        },
+        {
+          title: '备注',
+          key: 'Extra'
+        }
+      ],
+      fieldData: [],
+      idxColums: [
+        {
+          title: '索引名称',
+          key: 'key_name'
+        },
+        {
+          title: '是否唯一索引',
+          key: 'Non_unique'
+        },
+        {
+          title: '字段名',
+          key: 'column_name'
+        }
+      ],
+      idxData: [],
         assigned: [],
         wordList: [],
         loading: false
@@ -260,6 +349,44 @@
             this.$config.err_notice(this, error)
           })
       },
+
+      acquireStruct () {
+      this.$refs['formItem'].validate((valid) => {
+        if (valid) {
+          this.$Spin.show({
+            render: (h) => {
+              return h('div', [
+                h('Icon', {
+                  props: {
+                    size: 30,
+                    type: 'ios-loading'
+                  },
+                  style: {
+                    animation: 'ani-demo-spin 1s linear infinite'
+                  }
+                }),
+                h('div', '数据库连接中,请稍后........')
+              ])
+            }
+          })
+          axios.put(`${this.$config.url}/workorder/field`, {
+            'connection_info': JSON.stringify(this.formItem),
+            'id': this.id[0].id
+          })
+            .then(res => {
+              this.fieldData = res.data.field
+              this.idxData = res.data.idx
+              this.$Spin.hide()
+            })
+            .catch(() => {
+              this.$config.err_notice(this, '连接失败！详细信息请查看日志')
+              this.$Spin.hide()
+            })
+        } else {
+          this.$Message.error('表单验证失败!')
+        }
+      })
+    },
       ScreenConnection (val) {
         this.formItem.connection_name = ''
         this.formItem.basename = ''
@@ -286,6 +413,20 @@
               this.$config.err_notice(this, '无法连接数据库!请检查网络')
             })
         }
+      },
+      acquireTable () {
+      if (this.formItem.basename) {
+        let data = JSON.stringify(this.formItem)
+        axios.put(`${this.$config.url}/workorder/tablename`, {
+          'data': data,
+          'id': this.id[0].id
+        })
+          .then(res => {
+            this.tableform.info = res.data
+          }).catch(error => {
+            this.$config.err_notice(this, error)
+          })
+      }
       },
       test_sql () {
         let ddl = ['select']

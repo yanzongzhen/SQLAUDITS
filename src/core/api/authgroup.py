@@ -71,6 +71,8 @@ class auth_group(baseview.BaseView):
                 perm = {
                     'ddl': '0',
                     'ddlcon': [],
+                    'dql': '0',
+                    'dqlcon': [],
                     'dml': '0',
                     'dmlcon': [],
                     'user': '0',

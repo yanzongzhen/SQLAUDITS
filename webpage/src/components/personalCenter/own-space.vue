@@ -76,6 +76,13 @@
           </Select>
           <template>
             <FormItem>
+              <Divider orientation="left">DQL权限</Divider>
+              <FormItem label="DQL是否可见:">
+                <p>{{permission.dql}}</p>
+              </FormItem>
+              <FormItem label="可访问的连接名:" v-if="permission.dql === '是'">
+                <Tag color="blue" v-for="i in permission.dqlcon" :key="i">{{i}}</Tag>
+              </FormItem>
               <Divider orientation="left">DDL权限</Divider>
               <FormItem label="DDL是否可见:">
                 <p>{{permission.ddl}}</p>
@@ -197,6 +204,8 @@
         permission: {
           ddl: '0',
           ddlcon: Array,
+          dql: '0',
+          dqlcon: Array,
           dml: '0',
           dmlcon: Array,
           query: '0',

@@ -37,7 +37,9 @@ class dashboard(baseview.BaseView):
                     type=0, username=request.user).count()
                 sql = SqlOrder.objects.filter(
                     type=1, username=request.user).count()
-                return Response([alter, sql])
+                dql = SqlOrder.objects.filter(
+                    type=2, username=request.user).count()
+                return Response([alter, sql, dql])
             except Exception as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                 return HttpResponse(status=500)

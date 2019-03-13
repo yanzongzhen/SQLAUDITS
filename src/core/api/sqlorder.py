@@ -94,6 +94,8 @@ class sqlorder(baseview.BaseView):
                     type=type,
                     text=data['text'],
                     backup=data['backup'],
+                    export=data.get("export", "0"),
+                    sensitive=data.get("sensitive", "0"),
                     bundle_id=id,
                     assigned=data['assigned'],
                     delay=data['delay'],

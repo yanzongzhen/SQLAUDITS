@@ -45,8 +45,10 @@ class SqlOrder(models.Model):
     work_id = models.CharField(max_length=50, blank=True)  # 工单id
     username = models.CharField(max_length=50, blank=True)  # 提交人
     status = models.IntegerField(blank=True)  # 工单状态 0 disagree 1 agree 2 indeterminate 3 ongoing 4 faild
-    type = models.SmallIntegerField(blank=True)  # 工单类型 0 DDL 1 DML
+    type = models.SmallIntegerField(blank=True)  # 工单类型 0 DDL 1 DML  2 DQL
     backup = models.SmallIntegerField(blank=True)  # 工单是否备份 0 not backup 1 backup
+    export = models.SmallIntegerField(blank=True, null=True)  # 工单是否导出 0 not export 1 exprt
+    sensitive = models.SmallIntegerField(blank=True, null=True)  # 工单是否脱敏 0 not sensitive 1 sensitive
     bundle_id = models.IntegerField(db_index=True, null=True)  # Matching with Database_list id Field
     date = models.CharField(max_length=100, blank=True)  # 提交日期
     basename = models.CharField(max_length=50, blank=True)  # 数据库名

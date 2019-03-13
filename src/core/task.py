@@ -25,6 +25,8 @@ def set_auth_group(user):
         'ddlcon': [],
         'dml': '0',
         'dmlcon': [],
+        'dql': '0',
+        'dqlcon': [],
         'user': '0',
         'base': '0',
         'person': [],

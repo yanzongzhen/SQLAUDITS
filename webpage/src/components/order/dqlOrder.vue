@@ -60,13 +60,13 @@
                   </RadioGroup>
                 </FormItem>
 
-                <FormItem label="是否导出数据" prop="export">
+                <FormItem label="是否导出" prop="export" required>
                   <RadioGroup v-model="formItem.export">
                     <Radio label="1">是</Radio>
                     <Radio label="0">否</Radio>
                   </RadioGroup>
                 </FormItem>
-                <FormItem label="是否脱敏数据" prop="sensitive">
+                <FormItem label="是否脱敏" prop="sensitive" required>
                   <RadioGroup v-model="formItem.sensitive">
                     <Radio label="1">是</Radio>
                     <Radio label="0">否</Radio>
@@ -343,7 +343,7 @@
                 'data': JSON.stringify(this.formItem),
                 'sql': JSON.stringify(this.datalist.sqllist),
                 'real_name': sessionStorage.getItem('real_name'),
-                'type': 1,
+                'type': 2,
                 'id': this.id[0].id
               })
                 .then(res => {

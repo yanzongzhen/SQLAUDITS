@@ -131,7 +131,7 @@ export const appRouter = [{
           keepAlive: true
         },
         component: resolve => {
-          require(['./components/order/dqledit.vue'], resolve)
+          require(['./components/order/dqlOrder.vue'], resolve)
         }
       }
     ]

@@ -23,10 +23,11 @@ class Inception(object):
         self.__dict__.update(LoginDic)
         self.AES = cryptoAES(settings.SECRET_KEY)
         self.con = object
-        try:
-            self.password = self.AES.decrypt(self.__dict__.get('password'))
-        except ValueError:
-            self.password = self.__dict__.get('password')
+        self.password = self.__dict__.get('password')
+        # try:
+        #     self.password = self.AES.decrypt(self.__dict__.get('password'))
+        # except ValueError:
+        #     self.password = self.__dict__.get('password')
 
     def __enter__(self):
         un_init = util.init_conf()

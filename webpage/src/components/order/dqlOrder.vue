@@ -532,7 +532,7 @@
       }
     },
     mounted () {
-      axios.put(`${this.$config.url}/workorder/connection`, {'permissions_type': 'dml'})
+      axios.put(`${this.$config.url}/workorder/connection`, {'permissions_type': 'dql'})
         .then(res => {
           this.item = res.data['connection']
           this.assigned = res.data['assigend']

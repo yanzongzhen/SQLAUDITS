@@ -7,6 +7,7 @@ __pycache__/
 *.so
 webpage/node_modules
 webpage/dist
+src/exportData/
 # Distribution / packaging
 .Python
 src/deploy.conf

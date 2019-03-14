@@ -79,7 +79,9 @@ class auth_group(baseview.BaseView):
                     'base': '0',
                     'person': [],
                     'query': '0',
-                    'querycon': []
+                    'querycon': [],
+                    'setting': '0',
+                    'auth': '0'
                 }
                 for group_name in group_list:
                     auth = grained.objects.filter(username=group_name).first()

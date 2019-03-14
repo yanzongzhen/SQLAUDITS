@@ -35,7 +35,9 @@ def set_auth_group(user):
         'base': '0',
         'person': [],
         'query': '0',
-        'querycon': []
+        'querycon': [],
+        'setting': '0',
+        'auth': '0'
     }
     group = Account.objects.filter(username=user).first()
     group_list = str(group.auth_group).split(',')

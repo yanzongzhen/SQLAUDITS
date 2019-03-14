@@ -251,7 +251,7 @@ export const appRouter = [{
       },
       {
         path: 'auth-group',
-        name: 'auth-group',
+        name: 'authGroup',
         title: '权限组',
         icon: 'ios-switch',
         component: resolve => {

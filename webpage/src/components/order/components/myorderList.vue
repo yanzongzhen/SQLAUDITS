@@ -282,7 +282,7 @@
             this.export = res.data.export
             this.allsearchdata = res.data.data.data
             this.columnsName1 = res.data.data.title
-            this.Testresults = this.allsearchdata
+            this.Testresults = this.allsearchdata.slice(0, 100)
             this.total = res.data.data.len
             if (!isEmpty(res.data.filename)) {
               this.maxExport = true

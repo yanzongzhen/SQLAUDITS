@@ -147,6 +147,22 @@
               <Radio label="0">否</Radio>
             </RadioGroup>
           </FormItem>
+          <hr style="height:1px;border:none;border-top:1px dashed #dddee1;"/>
+          <br>
+          <FormItem label="系统设置权限:">
+            <RadioGroup v-model="permission.setting">
+              <Radio label="1">是</Radio>
+              <Radio label="0">否</Radio>
+            </RadioGroup>
+          </FormItem>
+          <hr style="height:1px;border:none;border-top:1px dashed #dddee1;"/>
+          <br>
+          <FormItem label="权限组管理权限:">
+            <RadioGroup v-model="permission.auth">
+              <Radio label="1">是</Radio>
+              <Radio label="0">否</Radio>
+            </RadioGroup>
+          </FormItem>                    
         </template>
       </Form>
       <div slot="footer">

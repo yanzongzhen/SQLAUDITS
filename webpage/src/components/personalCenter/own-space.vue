@@ -115,6 +115,12 @@
               <FormItem label="数据库管理权限:">
                 <p>{{permission.base}}</p>
               </FormItem>
+              <FormItem label="系统设置权限:">
+                <p>{{formItem.setting}}</p>
+              </FormItem>
+              <FormItem label="权限管理权限:">
+                <p>{{formItem.auth}}</p>
+              </FormItem>
             </FormItem>
           </template>
         </FormItem>
@@ -213,7 +219,9 @@
           index: '0',
           indexcon: Array,
           user: '0',
-          base: '0'
+          base: '0',
+          setting: '0',
+          auth: '0'
         },
         permission_list: Object,
         authgroup: [],

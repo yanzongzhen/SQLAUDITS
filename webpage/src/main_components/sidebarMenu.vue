@@ -76,7 +76,7 @@
           'query-review': '1',
           'query-audit': '1',
           'setting': '1',
-          'auth-group': '1'
+          'authGroup': '1'
         }
       }
     },
@@ -106,6 +106,8 @@
           this.filtermenulist.indexedit = c.ddl
           this.filtermenulist.dmledit = c.dml
           this.filtermenulist.dqledit = c.dql
+          this.filtermenulist.setting = c.setting
+          this.filtermenulist.authGroup = c.auth
           this.filtermenulist['management-user'] = c.user
           this.filtermenulist['management-database'] = c.base
         })

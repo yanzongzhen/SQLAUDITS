@@ -125,6 +125,13 @@
           </Select>
           <template>
             <FormItem>
+              <Divider orientation="left">DQL权限</Divider>
+              <FormItem label="DQL是否可见:">
+                <p>{{formItem.dql}}</p>
+              </FormItem>
+              <FormItem label="可访问的连接名:" v-if="formItem.dql === '是'">
+                <Tag color="blue" v-for="i in formItem.dqlcon" :key="i">{{i}}</Tag>
+              </FormItem>
               <Divider orientation="left">DDL权限</Divider>
               <FormItem label="DDL是否可见:">
                 <p>{{formItem.ddl}}</p>
@@ -156,6 +163,12 @@
               </FormItem>
               <FormItem label="数据库管理权限:">
                 <p>{{formItem.base}}</p>
+              </FormItem>
+              <FormItem label="系统设置权限:">
+                <p>{{formItem.setting}}</p>
+              </FormItem>
+              <FormItem label="权限管理权限:">
+                <p>{{formItem.auth}}</p>
               </FormItem>
             </FormItem>
           </template>
@@ -403,13 +416,17 @@
         formItem: {
           ddl: '',
           ddlcon: [],
+          dql: '',
+          dqlcon: [],
           dml: '',
           dmlcon: [],
           query: '',
           querycon: [],
           user: '',
           base: '',
-          person: ''
+          person: '',
+          setting: '',
+          auth: ''
         },
         // 更改部门及权限遮罩层状态
         email: {

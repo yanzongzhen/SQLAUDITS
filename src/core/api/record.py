@@ -95,10 +95,10 @@ class order_detail(baseview.BaseView):
                     if status == '1' or status == '4':
                         data = SqlRecord.objects.filter(workid=work_id).all()
                         _serializers = Record(data, many=True)
-                        return Response({'data': _serializers.data, 'type': type_id.type})
+                        return Response({'data': _serializers.data, 'type': order.type})
                     else:
                         data = SqlOrder.objects.filter(work_id=work_id).first()
-                        _in = {'data': [{'sql': x} for x in data.sql.split(';')], 'type': type_id.type}
+                        _in = {'data': [{'sql': x} for x in data.sql.split(';')], 'type': order.type}
                         return Response(_in)
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__} : {e}')

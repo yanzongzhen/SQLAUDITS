@@ -255,7 +255,7 @@ class order_push_message(object):
                                     for i in fe:
                                         l[i] = 'blob字段为不可呈现类型' 
                     
-                    if len(data_set["data"]) > 10:
+                    if len(data_set["data"]) > 200:
                         from settingConf.settings import MEDIA_ROOT
                         filename, status = file_help.save_file(data_set, MEDIA_ROOT)
                         if status:

@@ -93,10 +93,14 @@ TEMPLATES = [
     },
 ]
 
+MEDIA_ROOT=os.path.join(BASE_DIR,"exportData")
+
+MEDIA_URL="/media/"
+
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'dist/static').replace('\\', '/'),
+    os.path.join(BASE_DIR, 'webpage/dist/static').replace('\\', '/'),
 )
 
 # Password validation

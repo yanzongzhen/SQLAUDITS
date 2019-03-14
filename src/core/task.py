@@ -7,7 +7,7 @@ import time
 from django.http import HttpResponse
 from libs import send_email, util
 from core.api.serachsql import replace_limit
-from libs import call_inception,con_database
+from libs import call_inception,con_database, file_help
 from .models import (
     DatabaseList,
     Account,
@@ -255,15 +255,19 @@ class order_push_message(object):
                                     for i in fe:
                                         l[i] = 'blob字段为不可呈现类型' 
                     
-                    if len(data_set["data"]) > 1000:
-                        tmp = data_set.update({"data": data_set["data"][:100]})
-                        querypermissions.objects.create(
-                            work_id=self.order.work_id,
-                            username=self.order.username,
-                            statements=query_sql,
-                            filename="answer.csv",
-                            answer=json.dumps(tmp)
-                        )
+                    if len(data_set["data"]) > 10:
+                        from settingConf.settings import MEDIA_ROOT
+                        filename, status = file_help.save_file(data_set, MEDIA_ROOT)
+                        if status:
+                            querypermissions.objects.create(
+                                work_id=self.order.work_id,
+                                username=self.order.username,
+                                statements=query_sql,
+                                filename=filename,
+                                answer={"data": [],"title": [],"len":""}
+                            )
+                        else:
+                            CUSTOM_ERROR.error("***file save fail***",filename)
                     else:
                         querypermissions.objects.create(
                             work_id=self.order.work_id,

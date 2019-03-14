@@ -68,6 +68,8 @@ util.highlight = 'alter|and|as|asc|between|count|create|delete|desc|distinct|dro
 
 util.url = location.protocol + '//' + document.domain + ':8000/api/v1'
 
+util.media = location.protocol + '//' + document.domain + ':8000/media'
+
 util.auth = location.protocol + '//' + document.domain + ':8000/api-token-auth/'
 
 // util.url = '/api/v1'

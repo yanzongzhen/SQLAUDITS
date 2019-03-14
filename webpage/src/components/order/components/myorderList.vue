@@ -191,7 +191,7 @@
     },
     methods: {
       downLoad () {
-        window.location.href = this.filename
+        window.location.href = `${this.$config.media}/` + this.filename
       },
       rollback () {
         this.sql = ''
